@@ -8,6 +8,8 @@ def get_user_data():
 
     if pc_name == "LAPTOP-KV41CBJV":
         return r"C:\Users\cbroe\OneDrive\Skrivebord\Stuff\School\bachelor"
+    elif pc_name == "LAPTOP-A5E2E164":
+        return r"C:\Users\mstep\Desktop\Bachelor Project\Data"
     elif pc_name is "":
         return None
 
