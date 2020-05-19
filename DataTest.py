@@ -1,11 +1,19 @@
 import ConfigFile as cf
 from os import listdir
 from os.path import join, splitext
+
 import pandas as pd
 import numpy as np
-# import tensorflow as tf
-# from tensorflow import keras
-# from tensorflow.keras import layers
+
+import tensorflow as tf
+
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.optimizers import Adam
+from keras.callbacks import EarlyStopping
+
+#from tensorflow import keras
+#from tensorflow.keras import layers
 
 
 existing_folders = []
@@ -144,68 +152,83 @@ check_if_data_can_be_read()
 # SUPPORT VECTOR REGRESSION (SVR)
 
 
-# Importing the dataset
-dataset = pd.read_excel(r'C:\Users\mstep\Desktop\Bachelor Project\Data\output.xlsx')
-X = dataset.iloc[13750:86190, 2:]
-X = X.drop(['lon', 'lat', 'lon_rad', 'lat_rad'], axis = 1)
-y_lon = dataset.iloc[13750:86190, 10]
-#y_lon = y_lon.values.reshape(len(y_lon), 1)
-y_lon = y_lon.values.ravel()
-y_lat = dataset.iloc[13750:86190, 11]
-#y_lat = y_lat.values.reshape(len(y_lat), 1)
-y_lat = y_lat.values.ravel()
-
-# Feature Scaling
-from sklearn.preprocessing import StandardScaler    # we should get values <-3, 3>
-sc_X = StandardScaler()
-sc_y_lon = StandardScaler()
-sc_y_lat = StandardScaler()
-X = pd.DataFrame(sc_X.fit_transform(X)) # not sure if we transform both X_train and X_test, but I would guess so
-y_lon = pd.DataFrame(sc_y_lon.fit_transform(y_lon))
-y_lat = pd.DataFrame(sc_y_lat.fit_transform(y_lat))
-print(X)
-print(y_lon)
-print(y_lat)
-
-# Splitting the dataset into the Training set and Test set
-X_train = X.iloc[:65198, :]
-y_lon_train = y_lon.iloc[:65198, :]
-y_lat_train = y_lat.iloc[:65198, :]
-X_test = X.iloc[65198:, :]
-y_lon_test = y_lon.iloc[65198:, :]
-y_lat_test = y_lat.iloc[65198:, :]
-
-# Training the SVR model for longitude
-from sklearn.svm import SVR
-regressor_lon = SVR(kernel='rbf')
-regressor_lon.fit(X_train, y_lon_train)   # train on X_train and y_train
-
-# Training the SVR model for latitude
-regressor_lat = SVR(kernel='rbf')
-regressor_lat.fit(X_train, y_lat_train)   # train on X_train and y_train
-
-# Predicting a new result for longitude
-y_lon_pred = sc_y_lon.inverse_transform(regressor_lon.predict(X_test))   # rescaled predictions
-y_lon_pred = pd.DataFrame(y_lon_pred)
-
-# Predicting a new result for latitude
-y_lat_pred = sc_y_lat.inverse_transform(regressor_lat.predict(X_test))   # rescaled predictions
-y_lat_pred = pd.DataFrame(y_lat_pred)
-
-# Evaluating the model's performance
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-MAE_lon = mean_absolute_error(y_lon_test, y_lon_pred)
-MAE_lat = mean_absolute_error(y_lat_test, y_lat_pred)
-RMSE_lon = np.sqrt(mean_squared_error(y_lon_test, y_lon_pred))
-RMSE_lat = np.sqrt(mean_squared_error(y_lat_test, y_lat_pred))
-R2_lon = r2_score(y_lon_test, y_lon_pred)
-R2_lat = r2_score(y_lat_test, y_lat_pred)
-print(MAE_lon)
-print(RMSE_lon)
-print(R2_lon)
-print(MAE_lat)
-print(RMSE_lat)
-print(R2_lat)
+# # Importing the dataset
+# dataset = pd.read_excel(r'C:\Users\mstep\Desktop\Bachelor Project\Data\output.xlsx')
+#
+# X = dataset.iloc[13750:86190, 2:]
+# X = X.drop(['lon', 'lat', 'lon_rad', 'lat_rad'], axis = 1)
+# X = X.values
+#
+# y_lon = dataset.iloc[13750:86190, 10].values
+# y_lat = dataset.iloc[13750:86190, 11].values
+#
+# # Feature Scaling
+# from sklearn.preprocessing import StandardScaler    # we should get values <-3, 3>
+#
+# sc_X = StandardScaler()
+# sc_y_lon = StandardScaler()
+# sc_y_lat = StandardScaler()
+#
+# X = sc_X.fit_transform(X)
+#
+# y_lon = y_lon.reshape(-1, 1)
+# y_lon = sc_y_lon.fit_transform(y_lon)
+#
+# y_lat = y_lat.reshape(-1, 1)
+# y_lat = sc_y_lat.fit_transform(y_lat)
+#
+# print(X)
+# print(y_lon)
+# print(y_lat)
+#
+# # Splitting the dataset into the Training set and Test set
+# X = pd.DataFrame(X)
+# y_lon = pd.DataFrame(y_lon)
+# y_lat = pd.DataFrame(y_lat)
+#
+# X_train = X.iloc[:65198, :]
+# y_lon_train = y_lon.iloc[:65198, :]
+# y_lat_train = y_lat.iloc[:65198, :]
+#
+# X_test = X.iloc[65198:, :]
+# y_lon_test = y_lon.iloc[65198:, :]
+# y_lat_test = y_lat.iloc[65198:, :]
+#
+# # Training the SVR model for longitude
+# from sklearn.svm import SVR
+# regressor_lon = SVR(kernel='rbf')
+# regressor_lon.fit(X_train, y_lon_train)
+#
+# # Training the SVR model for latitude
+# regressor_lat = SVR(kernel='rbf')
+# regressor_lat.fit(X_train, y_lat_train)
+#
+# # Predicting a new result for longitude
+# y_lon_pred = sc_y_lon.inverse_transform(regressor_lon.predict(X_test))   # rescaled predictions
+# y_lon_pred = pd.DataFrame(y_lon_pred)
+#
+# # Predicting a new result for latitude
+# y_lat_pred = sc_y_lat.inverse_transform(regressor_lat.predict(X_test))   # rescaled predictions
+# y_lat_pred = pd.DataFrame(y_lat_pred)
+#
+# # Evaluating the model's performance
+# from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+#
+# MAE_lon = mean_absolute_error(y_lon_test, y_lon_pred)
+# MAE_lat = mean_absolute_error(y_lat_test, y_lat_pred)
+#
+# RMSE_lon = np.sqrt(mean_squared_error(y_lon_test, y_lon_pred))
+# RMSE_lat = np.sqrt(mean_squared_error(y_lat_test, y_lat_pred))
+#
+# R2_lon = r2_score(y_lon_test, y_lon_pred)
+# R2_lat = r2_score(y_lat_test, y_lat_pred)
+#
+# print(MAE_lon)
+# print(RMSE_lon)
+# print(R2_lon)
+# print(MAE_lat)
+# print(RMSE_lat)
+# print(R2_lat)
 
 
 # Decision Tree Regression
@@ -275,6 +298,37 @@ print(R2_lat)
 # print(MAE)
 # print(RMSE)
 # print(R2)
+
+
+
+# MULTILAYER PERCEPTRON
+
+# Importing the dataset
+dataset = pd.read_excel(r'C:\Users\mstep\Desktop\Bachelor Project\Data\output.xlsx')
+X = dataset.iloc[13750:86190, 2:]
+X = X.drop(['lon', 'lat', 'lon_rad', 'lat_rad'], axis = 1)
+y = dataset.iloc[13750:86190, 10:12]
+
+# Splitting the dataset into the Training set and Test set
+X_train = X.iloc[:65198, :]
+y_train = y.iloc[:65198, :]
+X_test = X.iloc[65198:, :]
+y_test = y.iloc[65198:, :]
+
+# Feature Scaling
+from sklearn.preprocessing import StandardScaler    # we should get values <-3, 3>
+
+sc_X_train = StandardScaler()
+sc_X_test = StandardScaler()
+sc_y_train = StandardScaler()
+sc_y_test = StandardScaler()
+
+X_train = sc_X_train.fit_transform(X_train)
+X_test = sc_X_test.fit_transform(X_test)
+y_train = sc_y_train.fit_transform(y_train)
+y_test = sc_y_test.fit_transform(y_test)
+
+
 
 # def domodel():
 #     model = keras.Sequential(
