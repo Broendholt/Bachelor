@@ -5,8 +5,9 @@ from os.path import join, splitext
 import pandas as pd
 import numpy as np
 
-import tensorflow as tf
+#import tensorflow as tf
 
+import keras
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
