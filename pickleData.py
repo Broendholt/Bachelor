@@ -12,7 +12,6 @@ data_files = listdir(data_folder)
 data = []
 
 
-
 for i in range(len(data_files)):
     tic = time.perf_counter()
 
@@ -26,7 +25,7 @@ for i in range(len(data_files)):
     data.append(dataTmp)
 
     toc = time.perf_counter()
-    timeDelta = (toc - tic) * (260 - 1)
+    timeDelta = (toc - tic) * (260 - i)
     print(f'ESTIMATED TIME: {timeDelta / 60:0.4f} MIN')
     print("---------------------------------------------")
 
@@ -58,7 +57,7 @@ for i in range(len(data) - 1):
     print(f'ESTIMATED TIME: {timeDelta / 60:0.4f} MIN')
     print("---------------------------------------------")
 
-tmp.to_excel('output2.xlsx')
+# tmp.to_excel('output2.xlsx')
 
 print(tmp)
 

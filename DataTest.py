@@ -3,7 +3,7 @@ from sklearn.metrics import r2_score
 import ConfigFile as cf
 from os import listdir
 from os.path import join, splitext
-
+import FeatureSelection as fs
 import pandas as pd
 import numpy as np
 
@@ -306,16 +306,61 @@ check_if_data_can_be_read()
 #MULTILAYER PERCEPTRON
 
 # Importing the dataset
-dataset = pd.read_excel(r'C:\\Users\\cbroe\\OneDrive\\Skrivebord\\Stuff\\School\\bachelor\\Python\\Bachelor\\output.xlsx')
-X = dataset.iloc[13750:86190, 2:]
-X = X.drop(['lon', 'lat', 'lon_rad', 'lat_rad'], axis = 1)
-y = dataset.iloc[13750:86190, 10:12]
+def prep_data(data_set):
+    if data_set == 1:
+        data = pd.read_excel(
+            r'C:\\Users\\cbroe\\OneDrive\\Skrivebord\\Stuff\\School\\bachelor\\Python\\Bachelor\\output.xlsx')
+
+        data = data.iloc[13750:86190]
+
+        lon, lat = fs.get_feature_selection_rows(data_set, 6)
+        X = data.filter(lon)
+        y = data.filter(['lon_rad', 'lat_rad'])
+
+        return data, X, y
+
+
+    elif data_set == 2:
+        data = pd.read_excel(
+            r'C:\\Users\\cbroe\\OneDrive\\Skrivebord\\Stuff\\School\\bachelor\\Python\\Bachelor\\output2.xlsx')
+
+        data = data.iloc[0:3700]
+
+        lon, lat = fs.get_feature_selection_rows(data_set, 5)
+        X = data.filter(lon)
+        y = data.filter(['Long', 'Lat'])
+
+        return data, X, y
+
+
+# Change this to change dataSet
+data_number = 1
+
+data, X, y = prep_data(data_number)
+
+data_length = len(data)
+test_train_cut = int(data_length * 0.9)
+
+
+if data_number == 1:
+    lon = data['lon_rad'][:test_train_cut].to_numpy()
+    lat = data['lat_rad'][:test_train_cut].to_numpy()
+    lon_plot = data['lon_rad'][test_train_cut:].to_numpy()
+    lat_plot = data['lat_rad'][test_train_cut:].to_numpy()
+
+elif data_number == 2:
+    lon = data['Long'][:test_train_cut].to_numpy()
+    lat = data['Lat'][:test_train_cut].to_numpy()
+    lon_plot = data['Long'][test_train_cut:].to_numpy()
+    lat_plot = data['Lat'][test_train_cut:].to_numpy()
+
 
 # Splitting the dataset into the Training set and Test set
-X_train = X.iloc[:65198, :]
-y_train = y.iloc[:65198, :]
-X_test = X.iloc[65198:, :]
-y_test = y.iloc[65198:, :]
+X_train = X.iloc[:test_train_cut, :]
+y_train = y.iloc[:test_train_cut, :]
+
+X_test = X.iloc[test_train_cut:, :]
+y_test = y.iloc[test_train_cut:, :]
 
 # Feature Scaling
 from sklearn.preprocessing import StandardScaler    # we should get values <-3, 3>
@@ -332,7 +377,7 @@ y_test = sc_y_test.fit_transform(y_test)
 
 # Defining the model
 model = Sequential()
-model.add(Dense(30, input_shape=(19,), activation='relu'))
+model.add(Dense(30, input_shape=(X_train.shape[1],), activation='relu'))
 model.add(Dense(30, activation='relu'))
 model.add(Dense(30, activation='relu'))
 model.add(Dense(30, activation='relu'))
@@ -358,7 +403,7 @@ y_train_pred = sc_y_train.inverse_transform(model.predict(X_train))
 y_test_pred = sc_y_test.inverse_transform(model.predict(X_test))
 y_train = sc_y_train.inverse_transform(y_train)
 y_test = sc_y_test.inverse_transform(y_test)
-print(y_test_pred)
+
 
 # Calculates and prints r2 score of training and testing data
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -372,6 +417,25 @@ print(MAE_train)
 print(RMSE_train)
 print(MAE_test)
 print(RMSE_test)
+
+
+y_pred_lon = y_test_pred[:,0]
+y_pred_lat = y_test_pred[:,1]
+index = np.arange(data_length - test_train_cut)
+print(index.shape)
+print(y_pred_lon.shape)
+print(lon_plot.shape)
+
+plt.subplot(211)
+plt.plot(index, lon_plot, 'r', index, y_pred_lon, 'b')
+plt.ylabel('Longitude in rad')
+plt.xlabel('1 sec interval')
+plt.title('Linear Regression')
+
+plt.subplot(212)
+plt.plot(index, lat_plot, 'r', index, y_pred_lat, 'b')
+plt.ylabel('Latitude in rad')
+plt.xlabel('1 sec interval')
 
 plt.show()
 
